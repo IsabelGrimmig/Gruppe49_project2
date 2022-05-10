@@ -62,6 +62,7 @@ int main() {
 
 //De individuelle noder
 
+
 void pushKort(struct Bunke* Location){
     struct Kort* tempKort = malloc(sizeof(struct Kort));
     if (Location->head == NULL){                                //hvis der ikke er nogen kort i bunken
@@ -363,7 +364,7 @@ void autoDeck(){
  *  2 betyder at deck er verificeret og indlæst rigtigt
  *  3 betyder indlæsning af et sorteret deck
  */
-int LD(char *argument) {
+int LD (char *argument) {
     if (argument == NULL) {
         autoDeck();
         return 3;
