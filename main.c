@@ -88,7 +88,7 @@ void addHeadKort(struct Bunke* Location){
         tempKort->next = Location->head;
         Location->head = tempKort;
     }
-    tempKort->prev = NULL
+    tempKort->prev = NULL;
 }
 
 void removeKort(struct Bunke* Location, struct Kort* specifikKort){
@@ -226,7 +226,7 @@ void moveKort(struct Bunke* From, struct Bunke* To){
 }
 
 void moveKortR(struct Bunke* From, struct Kort* whichCard, struct Bunke* To){
-    if(From->head == NULL){//edge case
+    if(From->head == NULL){                             //kant tilfælde
         return;
     }
     if(From->head == whichCard){                        //Flyt hele indholdet af bunken
@@ -248,5 +248,145 @@ void moveKortR(struct Bunke* From, struct Kort* whichCard, struct Bunke* To){
 
 //Logik til spilstrukturen
 
+void opsBunker() {
+    if(head_p != NULL){
+   //Opsæt af bunker i spillet
+    }
+    char *bunkeNavn[] = {"Column1", "Column2", "Column3", "Column4", "Column5",
+                           "Column6", "Column7", "Foundation1", "Foundation2",
+                           "Foundation3", "Foundation4", "sillygoose", NULL};
+    for(int i = 0; i < 12; i++){
+        opsBunker(bunkeNavn[i]);
+    }
+}
 
+// denne funktion sletter og rydder de tilsluttede kort til den bunke, når der ikke er flere kort afsluttes while løkken
+void resetKortspil(){
+    while(tail_p != NULL) {
+        popBunke(tail_p);
+    }
+    }
+void ClearBunke(struct Bunke* Location){
+    while(Location->tail!=NULL){
+        removeKort(Location, Location->tail);
+    }
+}
 
+/** Status for det der bliver returneret
+ * hvis det er 0 der returneres, er der ikke nogen kort i bunken
+ * hvis 1 returneres, er der noget galt med indholdet af kortene(enten ikke et kort, for mange kort eller for få kort
+ * hvis 2, der er ingen problemer
+ */
+
+int VerifyDeck(struct Bunke* Location){
+    struct KortSpil Status;
+    char *content = "A23456789TJQK", suits[] = "DSHC";
+    int tempSuit, tempNumber, cardCount = 0;
+    if(Location->tail == NULL){
+        return 0;                                               // Fejlen
+    }
+    //Initialiser status strukturen så de alle er 0
+    for(int i = 0; i < 4;i++){
+        Status.antalSuit[i] = 0;
+        for(int j = 0; i < 14;i++){
+            Status.SuitNo[i][j] = 0;
+        }
+    }
+    struct Kort *temp = Location->head;
+    //Nu finder vi navnet og værdien for hver af dem
+    while(temp != NULL){
+        tempSuit = -10;
+        tempNumber = -10;
+        cardCount++;
+        if(cardCount== 53){                                     //kant tilfælde, for mange kot i deck
+            ClearBunke(Location);
+            return 1;
+        }
+        for(int i = 0; i < 14; i++){
+            if(i == 13){                                        //kant tilfælde, kort eksistere ikke, resetter deck og returnere 1
+                ClearBunke(Location);
+                return 1;
+            }
+            if(content[i] == temp->name[0]){
+                tempNumber = i;
+                temp->number = i+1;
+                break;
+            }
+        }
+        for(int i = 0; i < 5; i++){
+            if(i == 4){                                         //kant tilfælde, kort eksistere ikke og vil returnere 1
+                ClearBunke(Location);
+                return 1;
+            }
+            if(suits[i] == temp->name[1]){
+                tempSuit = i;
+                temp->suit = i+1;
+                break;
+            }
+        }
+        // status strukturen
+        if(Status.SuitNo[tempSuit][tempNumber] != 0){
+            ClearBunke(Location);
+            return 1;
+        } else{
+            Status.SuitNo[tempSuit][tempNumber]++;
+            Status.antalSuit[tempSuit]++;
+        }
+        temp = temp->next;
+    }
+    for(int i = 0; i<4; i++){
+        if(Status.antalSuit[i] != 13){
+            ClearBunke(Location);
+            return 1;
+        }
+    }
+    return 2;                                                    // deck er verificeret
+}
+//Auto generering af deck og opsætning af noder.
+void autoDeck(){
+    int i, j;
+    char *content = "A23456789TJQK", suits[] = "DSHC";
+    for(i = 0; i< 4;i++){
+        for(j = 0; j < 13; j++){
+            pushKort(tail_p);
+            tail_p->tail->erSkjult = 1;
+            tail_p->tail->name[1] = suits[i];
+            tail_p->tail->name[0] = content[j];
+            tail_p->tail->number = j+1;
+            tail_p->tail->suit = i+1;
+        }
+    }
+}
+/**retunerings værdier
+ * 0 betyder at deck er loaded forkert
+ *  1 betyder at der er fejl i deck og at det ikke ser ud til at være sorteret rigtigt
+ *  2 betyder at deck er verificeret og indlæst rigtigt
+ *  3 betyder indlæsning af et sorteret deck
+ */
+int LD(char *argument) {
+    if (argument == NULL) {
+        autoDeck();
+        return 3;
+    }
+    char tempArray[20];
+    struct KortSpil status;
+    FILE *fp;
+    fp = fopen(&argument, "r");                // Åbner filen med 'read' muligheden
+    if (fp == NULL) { exit(-1); }
+    while (!feof(fp)) {
+        fgets(tempArray, 20, fp);
+        if (tempArray[strlen(tempArray) - 1] == '\n') {
+            tempArray[strlen(tempArray) - 1] = 0;
+        }
+        if (strlen(tempArray) > 2) {//deck can't possibly be valid
+            ClearBunke(tail_p);
+            return 1;
+        }
+        pushKort(tail_p);
+        tail_p->tail->erSkjult = 1;
+        tail_p->tail->name[0] = tempArray[0];
+        tail_p->tail->name[1] = tempArray[1];
+    }
+    fclose(fp);
+    return VerifyDeck(tail_p);
+}
