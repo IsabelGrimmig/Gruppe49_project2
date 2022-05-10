@@ -279,7 +279,7 @@ void ClearBunke(struct Bunke* Location){
  * hvis 2, der er ingen problemer
  */
 
-int VerifyDeck(struct Bunke* Location){
+int DeckKontrol(struct Bunke* Location){
     struct KortSpil Status;
     char *content = "A23456789TJQK", suits[] = "DSHC";
     int tempSuit, tempNumber, cardCount = 0;
@@ -389,5 +389,5 @@ int LD (char *argument) {
         tail_p->tail->name[1] = tempArray[1];
     }
     fclose(fp);
-    return VerifyDeck(tail_p);
+    return DeckKontrol(tail_p);
 }
